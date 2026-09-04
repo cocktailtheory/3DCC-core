@@ -22,11 +22,12 @@
     width:min(440px,92vw);background:rgba(13,13,22,.80);backdrop-filter:blur(10px);border:1px solid var(--line);
     border-radius:12px;padding:15px 20px;text-align:center;transition:opacity .3s}
   .readout-note.empty .rname{color:var(--soft);font-size:14px;font-weight:500}
+  .readout-note.empty .rcoord,.readout-note.empty .rsub{display:none}
   .rname{font-family:var(--serif);font-weight:600;font-size:19px;letter-spacing:.03em;color:var(--fg)}
   .rname .at{font-family:var(--en);font-style:italic;color:var(--gold-bright)}
   .rcoord{font-family:var(--en);font-style:italic;color:var(--gold);letter-spacing:.06em;font-size:13px;margin-top:5px;min-height:14px}
   .rsub{font-family:var(--sans);font-size:11px;color:var(--soft);letter-spacing:.1em;margin-top:6px;min-height:12px}
-  .hint{position:fixed;z-index:5;left:0;right:0;bottom:calc(100px + env(safe-area-inset-bottom));text-align:center;color:var(--soft);font-size:11px;letter-spacing:.14em;pointer-events:none;transition:opacity .5s}
+  .hint{position:fixed;z-index:5;left:0;right:0;bottom:calc(112px + env(safe-area-inset-bottom));text-align:center;color:var(--soft);font-size:11px;letter-spacing:.14em;pointer-events:none;transition:opacity .5s}
   .copy{position:fixed;z-index:5;left:0;right:0;top:calc(56px + env(safe-area-inset-top));text-align:center;font-family:var(--en);font-size:9px;color:var(--soft);letter-spacing:.05em;line-height:1.5;opacity:.6;pointer-events:none;padding:0 12px}
   .readout-note.rise{animation:riseIn .5s cubic-bezier(.2,.7,.2,1)}
   @keyframes riseIn{from{opacity:.35;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
@@ -43,16 +44,16 @@
 </head>
 <body>
 <canvas id="stage"></canvas>
-<div class="top"><div class="en">3DCC ™</div><div class="jp">The Three-Dimensional Cognitive Coordinate</div></div>
+<div class="top"><div class="en">3DCC</div><div class="jp">The Three-Dimensional Cognitive Coordinate</div></div>
 <div class="readout-note empty">
-  <div class="rname">どこかのゾーンに、触れてみて。</div>
+  <div class="rname">Touch a zone, anywhere.</div>
   <div class="rcoord"></div>
   <div class="rsub"></div>
 </div>
-<div class="hint">ドラッグで回転 ・ 球をタップ</div>
-<div class="copy">Pat. &amp; Des. Pending (Japan App. Nos. 2026-175647 / 2026-14085)<br>© Iwao Yoshihide 2026</div>
+<div class="hint">Drag to rotate · Tap a sphere</div>
+<div class="copy">Patent- and design-pending (Japan)<br>© Iwao Yoshihide 2026</div>
 <div id="flash"></div>
-<div id="inhint">＠のまわりを巡る：ドラッグ　／　席から光を放つ：球をタップ</div>
+<div id="inhint">Drag to orbit @ · Tap a sphere to reach it</div>
 <button id="takeoff" type="button">↑ TAKE OFF</button>
 <button id="sound" type="button">♪ on</button>
 <script>
@@ -68,33 +69,33 @@
   const DISP={Refresh:"Crisp",Soft:"Light"};
   /* β：1ゾーン＝代表1杯のみをクライアントへ。完全な配置（235）は蔵に残す。 */
   const REP={
-    "Hard|Dry|Refresh": {n:"Gimlet", m:"Gin ・ Lime"},
-    "Hard|Dry|Mellow": {n:"Vesper", m:"Gin ・ Vodka ・ Lillet Blanc"},
-    "Hard|Dry|Creamy": {n:"White Cargo", m:"Gin ・ Vanilla Ice Cream"},
-    "Hard|Semi Sweet|Refresh": {n:"Margarita", m:"Tequila ・ Cointreau ・ Lime"},
-    "Hard|Semi Sweet|Mellow": {n:"Boulevardier", m:"Rye ・ Campari ・ Sweet Vermouth"},
-    "Hard|Semi Sweet|Creamy": {n:"White Russian", m:"Vodka ・ Coffee Liqueur ・ Cream"},
-    "Hard|Sweet|Refresh": {n:"Caipirinha", m:"Cachaça ・ Lime ・ Sugar"},
-    "Hard|Sweet|Mellow": {n:"Rusty Nail", m:"Scotch ・ Drambuie"},
-    "Hard|Sweet|Creamy": {n:"Alexander", m:"Brandy ・ Crème de Cacao ・ Cream"},
-    "Mild|Dry|Refresh": {n:"Salty Dog", m:"Vodka ・ Grapefruit,Salt"},
-    "Mild|Dry|Mellow": {n:"Bamboo", m:"Dry Sherry ・ Dry Vermouth ・ Bitters"},
-    "Mild|Dry|Creamy": {n:"Cow Boy", m:"Bourbon ・ Cream"},
-    "Mild|Semi Sweet|Refresh": {n:"Mojito", m:"White Rum ・ Lime ・ Sugar ・ Mint ・ Soda"},
-    "Mild|Semi Sweet|Mellow": {n:"Adonis", m:"Dry Sherry ・ Sweet Vermouth ・ Orange Bitters"},
-    "Mild|Semi Sweet|Creamy": {n:"Pina Colada", m:"White Rum ・ Coconut Cream ・ Pineapple"},
-    "Mild|Sweet|Refresh": {n:"Long Island Iced Tea", m:"Gin,Vodka ・ White Rum,Tequila,Lemon,Triple Sec,Cola"},
-    "Mild|Sweet|Mellow": {n:"Tequila Sunrise", m:"Tequila ・ Orange Juice ・ Grenadine"},
-    "Mild|Sweet|Creamy": {n:"Grasshopper", m:"Crème de Menthe ・ Crème de Cacao ・ Cream"},
-    "Soft|Dry|Refresh": {n:"Gin Ricky", m:"Gin Ricky: Gin ・ Lime ・ Soda"},
-    "Soft|Dry|Mellow": {n:"High Ball", m:"Whisky ・ Soda"},
-    "Soft|Dry|Creamy": {n:"Red Eye/Tom Boy", m:"Beer ・ Tomato Juice"},
+    "Hard|Dry|Refresh": {n:"Gimlet", m:"Gin · Lime"},
+    "Hard|Dry|Mellow": {n:"Vesper", m:"Gin · Vodka · Lillet Blanc"},
+    "Hard|Dry|Creamy": {n:"White Cargo", m:"Gin · Vanilla Ice Cream"},
+    "Hard|Semi Sweet|Refresh": {n:"Margarita", m:"Tequila · Cointreau · Lime"},
+    "Hard|Semi Sweet|Mellow": {n:"Boulevardier", m:"Rye · Campari · Sweet Vermouth"},
+    "Hard|Semi Sweet|Creamy": {n:"White Russian", m:"Vodka · Coffee Liqueur · Cream"},
+    "Hard|Sweet|Refresh": {n:"Caipirinha", m:"Cachaça · Lime · Sugar"},
+    "Hard|Sweet|Mellow": {n:"Rusty Nail", m:"Scotch · Drambuie"},
+    "Hard|Sweet|Creamy": {n:"Alexander", m:"Brandy · Crème de Cacao · Cream"},
+    "Mild|Dry|Refresh": {n:"Salty Dog", m:"Vodka · Grapefruit,Salt"},
+    "Mild|Dry|Mellow": {n:"Bamboo", m:"Dry Sherry · Dry Vermouth · Bitters"},
+    "Mild|Dry|Creamy": {n:"Cow Boy", m:"Bourbon · Cream"},
+    "Mild|Semi Sweet|Refresh": {n:"Mojito", m:"White Rum · Lime · Sugar · Mint · Soda"},
+    "Mild|Semi Sweet|Mellow": {n:"Adonis", m:"Dry Sherry · Sweet Vermouth · Orange Bitters"},
+    "Mild|Semi Sweet|Creamy": {n:"Pina Colada", m:"White Rum · Coconut Cream · Pineapple"},
+    "Mild|Sweet|Refresh": {n:"Long Island Iced Tea", m:"Gin,Vodka · White Rum,Tequila,Lemon,Triple Sec,Cola"},
+    "Mild|Sweet|Mellow": {n:"Tequila Sunrise", m:"Tequila · Orange Juice · Grenadine"},
+    "Mild|Sweet|Creamy": {n:"Grasshopper", m:"Crème de Menthe · Crème de Cacao · Cream"},
+    "Soft|Dry|Refresh": {n:"Gin Ricky", m:"Gin Ricky: Gin · Lime · Soda"},
+    "Soft|Dry|Mellow": {n:"High Ball", m:"Whisky · Soda"},
+    "Soft|Dry|Creamy": {n:"Red Eye/Tom Boy", m:"Beer · Tomato Juice"},
     "Soft|Semi Sweet|Refresh": {n:"Gin & Tonic", m:"Gin,Tonic Water"},
-    "Soft|Semi Sweet|Mellow": {n:"Sea Breeze", m:"Vodka ・ Cranberry,Grapefruit"},
-    "Soft|Semi Sweet|Creamy": {n:"Snowball", m:"Advocaat ・ Lemonade"},
+    "Soft|Semi Sweet|Mellow": {n:"Sea Breeze", m:"Vodka · Cranberry,Grapefruit"},
+    "Soft|Semi Sweet|Creamy": {n:"Snowball", m:"Advocaat · Lemonade"},
     "Soft|Sweet|Refresh": {n:"Cassis & Soda", m:"Crème de Cassis,Soda"},
-    "Soft|Sweet|Mellow": {n:"Fuzzy Navel", m:"Peach Schnapps ・ Orange Juice"},
-    "Soft|Sweet|Creamy": {n:"Kahlua Milk", m:"Coffee Liqueur ・ Milk"}
+    "Soft|Sweet|Mellow": {n:"Fuzzy Navel", m:"Peach Schnapps · Orange Juice"},
+    "Soft|Sweet|Creamy": {n:"Kahlua Milk", m:"Coffee Liqueur · Milk"}
   };
 
   const ZONES=[];
@@ -169,7 +170,7 @@
     const center=(z.x===0&&z.y===0&&z.z===0);
     const col=center?new THREE.Color().setHSL(0,0,0.7):zoneColor(z.x,z.y,z.z);
     const mat=new THREE.MeshPhysicalMaterial({color:col,emissive:col.clone().multiplyScalar(0.15),roughness:0.14,metalness:0,clearcoat:1,clearcoatRoughness:0.08,envMapIntensity:1.65,transparent:true,opacity:0});
-    /* カスタムGLSLを一節だけ注入：虹色のフレネル・リム（薄膜干渉風の真珠光沢）。反射やクリアコートはそのまま活かす */
+    /* カスタムGLSLを一節だけ注入：虹色のフレネル·リム（薄膜干渉風の真珠光沢）。反射やクリアコートはそのまま活かす */
     mat.onBeforeCompile=(sh)=>{sh.fragmentShader=sh.fragmentShader.replace('#include <output_fragment>','#include <output_fragment>\n  float _f=pow(1.0-clamp(dot(normalize(normal),normalize(vViewPosition)),0.0,1.0),2.6);\n  vec3 _iri=0.5+0.5*cos(6.28318*(_f*2.5+vec3(0.0,0.33,0.67)));\n  gl_FragColor.rgb+=_iri*_f*0.6;');};
     mat.customProgramCacheKey=()=>'iri3dcc';
     const m=new THREE.Mesh(new THREE.SphereGeometry(center?0.22:0.18,32,32),mat);
@@ -266,12 +267,12 @@
     function click(freq,pan){ if(!ok())return; tone(freq,0.16,'square',0.12,pan); tone(freq*2.0,0.10,'triangle',0.10,pan); tone(freq*4.02,0.035,'square',0.06,pan); } /* 硬質：短く鋭い減衰＋高域の硬いアタック芯。座標で高さが決まる */
     function zip(){ if(!ok())return; const t=ctx.currentTime,o=ctx.createOscillator(),g=ctx.createGain(); o.type='sine'; o.frequency.setValueAtTime(320,t); o.frequency.exponentialRampToValueAtTime(920,t+0.32); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.07,t+0.03); g.gain.exponentialRampToValueAtTime(0.0001,t+0.34); o.connect(g); g.connect(master); o.start(t); o.stop(t+0.36); } /* ネオン走行の上昇zip */
     function closeTick(){ tone(150,0.22,'sine',0.06,0); }
-    function enter(){ if(!ok())return; if(drone)return; const t=ctx.currentTime,g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.13,t+1.2); const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=240; const o1=ctx.createOscillator(),o2=ctx.createOscillator(),o3=ctx.createOscillator(); o1.type=o2.type=o3.type='sine'; o1.frequency.value=41; o2.frequency.value=41.2; o3.frequency.value=61.5; const lfo=ctx.createOscillator(),lg=ctx.createGain(); lfo.frequency.value=0.11; lg.gain.value=0.03; lfo.connect(lg); lg.connect(g.gain); o1.connect(lp);o2.connect(lp);o3.connect(lp); lp.connect(g); g.connect(master); o1.start(t);o2.start(t);o3.start(t);lfo.start(t); drone={o1,o2,o3,lfo,g}; } /* 原点の低音ドローン（一段低く・呼吸するLFO付き） */ /* 原点の低音ドローン（呼吸するLFO付き） */
+    function enter(){ if(!ok())return; if(drone)return; const t=ctx.currentTime,g=ctx.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.13,t+1.2); const lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=240; const o1=ctx.createOscillator(),o2=ctx.createOscillator(),o3=ctx.createOscillator(); o1.type=o2.type=o3.type='sine'; o1.frequency.value=41; o2.frequency.value=41.2; o3.frequency.value=61.5; const lfo=ctx.createOscillator(),lg=ctx.createGain(); lfo.frequency.value=0.11; lg.gain.value=0.03; lfo.connect(lg); lg.connect(g.gain); o1.connect(lp);o2.connect(lp);o3.connect(lp); lp.connect(g); g.connect(master); o1.start(t);o2.start(t);o3.start(t);lfo.start(t); drone={o1,o2,o3,lfo,g}; } /* 原点の低音ドローン（一段低く·呼吸するLFO付き） */ /* 原点の低音ドローン（呼吸するLFO付き） */
     function exit(){ if(!ctx)return; if(!muted){ const t=ctx.currentTime,o=ctx.createOscillator(),g=ctx.createGain(); o.type='sine'; o.frequency.setValueAtTime(220,t); o.frequency.exponentialRampToValueAtTime(660,t+0.5); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.06,t+0.05); g.gain.exponentialRampToValueAtTime(0.0001,t+0.55); o.connect(g); g.connect(master); o.start(t); o.stop(t+0.6); } if(drone){ const t=ctx.currentTime,d=drone; drone=null; try{ d.g.gain.cancelScheduledValues(t); d.g.gain.setValueAtTime(Math.max(0.0001,d.g.gain.value),t); d.g.gain.exponentialRampToValueAtTime(0.0001,t+0.8); }catch(e){} setTimeout(function(){try{d.o1.stop();d.o2.stop();d.o3.stop();d.lfo.stop();}catch(e){}},900); } }
     function setMuted(m){ muted=m; if(master)master.gain.value=m?0:0.9; if(m&&drone)exit(); }
     return {init:init,click:click,zip:zip,closeTick:closeTick,enter:enter,exit:exit,setMuted:setMuted,isMuted:function(){return muted;}};
   })();
-  function coordFreq(o){ const z=o.zone.z,y=o.zone.y,x=o.zone.x,P=[0,2,4,7,9,12,14,16,19,21]; let idx=(z+1)*3+(x+1); idx=Math.max(0,Math.min(9,idx)); const midi=60+P[idx]+y*12; return 440*Math.pow(2,(midi-69)/12); } /* 甘辛(z)で高さ・強さ(y)でオクターブ・口当たり(x)で微差＝ペンタトニックで常に和む */
+  function coordFreq(o){ const z=o.zone.z,y=o.zone.y,x=o.zone.x,P=[0,2,4,7,9,12,14,16,19,21]; let idx=(z+1)*3+(x+1); idx=Math.max(0,Math.min(9,idx)); const midi=60+P[idx]+y*12; return 440*Math.pow(2,(midi-69)/12); } /* 甘辛(z)で高さ·強さ(y)でオクターブ·口当たり(x)で微差＝ペンタトニックで常に和む */
   function panOf(mesh){ const v=new THREE.Vector3(); mesh.getWorldPosition(v); v.project(camera); return Math.max(-1,Math.min(1,v.x)); }
   let neon=null;
   let baseCamPos=new THREE.Vector3(), lookTarget=new THREE.Vector3();
@@ -288,7 +289,7 @@
   }
   window.addEventListener('resize',setSize);setSize();
 
-  /* ===== 起動シーケンス（ゆっくり・ドラマチック） ===== */
+  /* ===== 起動シーケンス（ゆっくり·ドラマチック） ===== */
   const B={at:[0.5,3.0],axY:[3.0,5.5],axX:[5.5,7.8],axZ:[7.8,10.1],sp:[10.1,13.8],done:14.2};
   let booting=!reduce, bootT0=null;
   spheres.forEach(o=>{o._d=o.center?0:(Math.abs(o.zone.x)+Math.abs(o.zone.y)+Math.abs(o.zone.z));});
@@ -325,10 +326,10 @@
   const note=document.querySelector('.readout-note');
   const rName=note.querySelector('.rname'),rCoord=note.querySelector('.rcoord'),rSub=note.querySelector('.rsub');
   function setReadoutText(m){
-    const z=m.userData.zone, words=`${DISP[z.hard]||z.hard} ・ ${DISP[z.body]||z.body} ・ ${z.sweet}`;
+    const z=m.userData.zone, words=`${DISP[z.hard]||z.hard} · ${DISP[z.body]||z.body} · ${z.sweet}`;
     note.classList.remove('empty');
     if(m.userData.center){
-      rName.innerHTML='<span class="at">@</span>　原点';rCoord.textContent=words;rSub.textContent='観測者の座';
+      rName.innerHTML='<span class="at">@</span> Origin';rCoord.textContent=words;rSub.textContent="The observer's seat";
     }else{
       rName.textContent=z.rep?z.rep.n:'—';rCoord.textContent=words;rSub.textContent=z.rep?z.rep.m:'';
     }
@@ -350,13 +351,13 @@
   }
   function fadeReadoutOut(){ /* 光が退き、また触れてと促す空の札へ静かに戻る */
     const tok=++closeToken;
-    if(reduce){note.style.cssText='';note.classList.add('empty');rName.textContent='どこかのゾーンに、触れてみて。';rCoord.textContent='';rSub.textContent='';return;}
+    if(reduce){note.style.cssText='';note.classList.add('empty');rName.textContent='Touch a zone, anywhere.';rCoord.textContent='';rSub.textContent='';return;}
     note.style.transition='opacity .3s ease, transform .3s ease';
     note.style.opacity='0';note.style.transform='translateX(-50%) translateY(8px)';
     setTimeout(()=>{
       if(tok!==closeToken)return;
       note.classList.add('empty');
-      rName.textContent='どこかのゾーンに、触れてみて。';rCoord.textContent='';rSub.textContent='';
+      rName.textContent='Touch a zone, anywhere.';rCoord.textContent='';rSub.textContent='';
       note.style.transition='none';note.style.transform='translateX(-50%)';void note.offsetWidth;
       note.style.transition='opacity .35s ease';note.style.opacity='1';
     },300);
@@ -433,7 +434,7 @@
     camera.rotation.set(0,0,0); camera.position.copy(inPos()); camera.lookAt(_ORIGIN);
     camera.fov=IN_FOV; camera.updateProjectionMatrix();
     atSprite.scale.set(0.6,0.6,1); satVisMul=1; /* ＠と軌道環は消さない＝あなたが巡る“中心”として残す */
-    centerScale=0.5; centerObj.halo.scale.setScalar(0.5); /* 内観では＠球を半分に＝視認性・操作性優先 */
+    centerScale=0.5; centerObj.halo.scale.setScalar(0.5); /* 内観では＠球を半分に＝視認性·操作性優先 */
     document.getElementById('takeoff').classList.add('show');
     const ih=document.getElementById('inhint'); ih.classList.add('show'); setTimeout(()=>ih.classList.remove('show'),4600);
   }
@@ -459,7 +460,7 @@
   function clearInside(){
     if(inSel){const p=spheres.find(x=>x.mesh===inSel); if(p)inSel.material.emissive=p.col.clone().multiplyScalar(0.15); inSel=null;} AUD.closeTick();
     killNeon();
-    note.classList.add('empty'); rName.textContent='どこかのゾーンに、触れてみて。'; rCoord.textContent=''; rSub.textContent=''; note.style.opacity='';
+    note.classList.add('empty'); rName.textContent='Touch a zone, anywhere.'; rCoord.textContent=''; rSub.textContent=''; note.style.opacity='';
   }
   canvas.addEventListener('pointerdown',e=>{AUD.init();if(booting){finishBoot();}dragging=true;autoRot=false;lastX=e.clientX;lastY=e.clientY;moved=0;canvas.classList.add('dragging');if(resumeT)clearTimeout(resumeT);});
   window.addEventListener('pointermove',e=>{
@@ -485,7 +486,7 @@
   document.getElementById('takeoff').addEventListener('click',()=>{ if(mode==='internal')exitSequence(); });
   (function(){const b=document.getElementById('sound');b.addEventListener('click',()=>{AUD.init();const m=!AUD.isMuted();AUD.setMuted(m);b.textContent=m?'♪ off':'♪ on';b.classList.toggle('muted',m);});})();
 
-  /* ===== ネオン・ベクトル：＠ → 球（X→Y→Z の折れ線）が発光して消える ===== */
+  /* ===== ネオン·ベクトル：＠ → 球（X→Y→Z の折れ線）が発光して消える ===== */
   const NEON={core:0xffd6ea,mid:0xff3d8b,outer:0xff77b0};
   const NSPEC=[[0.082,NEON.outer,0.22],[0.042,NEON.mid,0.5],[0.014,NEON.core,0.95]];
   function killNeon(){
@@ -509,7 +510,7 @@
     killNeon();
     /* ベクトルの“順番”で三段化：軸上ゾーン(E/V/K/P/M/N)は、垂直な次の軸をコリドーにして
        「B出る→A横断→B戻る」の三脚で描く（岩尾案：X軸=Y-X-Y、Y軸=Z-Y-Z…の循環）。
-       同じ点に着くが一本→三本のベクトルになる。面は2脚・角は3脚のまま。 */
+       同じ点に着くが一本→三本のベクトルになる。面は2脚·角は3脚のまま。 */
     const AX=['x','y','z'], NX={x:'y',y:'z',z:'x'};
     const nz=AX.filter(k=>Math.abs(p[k])>=1e-4);
     const pts=[new THREE.Vector3(0,0,0)];
