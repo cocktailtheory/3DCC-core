@@ -4,61 +4,89 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#07070d">
-<title>3DCC</title>
+<title>3DCC — The Three-Dimensional Cognitive Coordinate</title>
+<meta name="description" content="An interactive three-dimensional coordinate of taste. Cocktails placed by human perception — step into the origin and reach out.">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMwNzA3MGQiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZTZjMDdhIiBzdHJva2Utd2lkdGg9IjIuNCIvPjx0ZXh0IHg9IjMyIiB5PSI0MSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iMjUiIGZpbGw9IiNlNmMwN2EiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkA8L3RleHQ+PC9zdmc+">
+<meta property="og:type" content="website">
+<meta property="og:title" content="3DCC — The Three-Dimensional Cognitive Coordinate">
+<meta property="og:description" content="Step into the origin of taste. An interactive coordinate space for cocktails, built on Three.js.">
+<meta property="og:url" content="https://cocktailtheory.github.io/3DCC-core/">
+<meta property="og:image" content="https://cocktailtheory.github.io/3DCC-core/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="3DCC — The Three-Dimensional Cognitive Coordinate">
+<meta name="twitter:description" content="Step into the origin of taste. Trace the taste — from the inside.">
+<meta name="twitter:image" content="https://cocktailtheory.github.io/3DCC-core/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;500&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
   :root{--bg:#07070d;--fg:#ece6da;--soft:#9a93a6;--gold:#c79f63;--gold-bright:#e6b94a;--line:#2a2a3c;
-    --en:'Cormorant Garamond',serif;--serif:'Shippori Mincho',serif;--sans:'Zen Kaku Gothic New',sans-serif;}
+    --en:'Cormorant Garamond',serif;--serif:'Shippori Mincho',serif;--sans:'Zen Kaku Gothic New',sans-serif;--head:'Playfair Display',Georgia,serif;}
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{height:100%;height:100dvh;overflow:hidden;background:radial-gradient(120% 90% at 50% -10%,#12142a 0%,#0a0a16 45%,var(--bg) 100%);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased}
   #stage{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
   #stage:active{cursor:grabbing}
   .top{position:fixed;z-index:5;top:calc(12px + env(safe-area-inset-top));left:0;right:0;text-align:center;pointer-events:none}
-  .top .en{font-family:var(--en);font-style:italic;letter-spacing:.24em;color:var(--gold-bright);font-size:13px}
-  .top .jp{font-family:var(--serif);font-size:11.5px;color:var(--soft);letter-spacing:.16em;margin-top:3px}
+  .top .en{font-family:var(--head);font-weight:700;letter-spacing:.06em;color:var(--gold-bright);font-size:17px}
+  .top .jp{font-family:var(--head);font-size:12.5px;color:var(--soft);letter-spacing:.14em;margin-top:4px}
   .readout-note{position:fixed;z-index:6;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);
     width:min(440px,92vw);background:rgba(13,13,22,.80);backdrop-filter:blur(10px);border:1px solid var(--line);
     border-radius:12px;padding:15px 20px;text-align:center;transition:opacity .3s}
-  .readout-note.empty .rname{color:var(--soft);font-size:14px;font-weight:500}
+  .readout-note.empty .rname{color:var(--soft);font-size:15px;font-weight:500}
   .readout-note.empty .rcoord,.readout-note.empty .rsub{display:none}
-  .rname{font-family:var(--serif);font-weight:600;font-size:19px;letter-spacing:.03em;color:var(--fg)}
-  .rname .at{font-family:var(--en);font-style:italic;color:var(--gold-bright)}
-  .rcoord{font-family:var(--en);font-style:italic;color:var(--gold);letter-spacing:.06em;font-size:13px;margin-top:5px;min-height:14px}
-  .rsub{font-family:var(--sans);font-size:11px;color:var(--soft);letter-spacing:.1em;margin-top:6px;min-height:12px}
-  .hint{position:fixed;z-index:5;left:0;right:0;bottom:calc(112px + env(safe-area-inset-bottom));text-align:center;color:var(--soft);font-size:11px;letter-spacing:.14em;pointer-events:none;transition:opacity .5s}
-  .copy{position:fixed;z-index:5;left:0;right:0;top:calc(56px + env(safe-area-inset-top));text-align:center;font-family:var(--en);font-size:9px;color:var(--soft);letter-spacing:.05em;line-height:1.5;opacity:.6;pointer-events:none;padding:0 12px}
+  .rname{font-family:var(--head);font-weight:700;font-size:20px;letter-spacing:.01em;color:var(--fg)}
+  .rname .at{font-family:var(--head);font-weight:700;color:var(--gold-bright)}
+  .rcoord{font-family:var(--head);color:var(--gold);letter-spacing:.04em;font-size:14px;margin-top:6px;min-height:15px}
+  .rsub{font-family:var(--sans);font-size:12px;color:var(--soft);letter-spacing:.1em;margin-top:6px;min-height:13px}
+  .hint{position:fixed;z-index:5;left:0;right:0;bottom:calc(108px + env(safe-area-inset-bottom));text-align:center;color:var(--soft);font-size:18px;line-height:1.5;letter-spacing:.1em;pointer-events:none;opacity:0;transition:opacity .5s}
+  .copy{position:fixed;z-index:5;left:0;right:0;top:calc(56px + env(safe-area-inset-top));text-align:center;font-family:var(--head);font-size:10px;color:var(--soft);letter-spacing:.05em;line-height:1.5;opacity:.6;pointer-events:none;padding:0 12px}
   .readout-note.rise{animation:riseIn .5s cubic-bezier(.2,.7,.2,1)}
   @keyframes riseIn{from{opacity:.35;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
   #flash{position:fixed;inset:0;z-index:20;background:#fff;opacity:0;pointer-events:none}
-  #takeoff{position:fixed;z-index:21;left:50%;transform:translateX(-50%);bottom:calc(30px + env(safe-area-inset-bottom));padding:11px 20px;border:1px solid rgba(230,192,122,.55);border-radius:999px;background:rgba(10,10,22,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#e6c07a;font-family:var(--en);font-size:12px;letter-spacing:.18em;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .4s;white-space:nowrap}
+  #takeoff{position:fixed;z-index:21;left:50%;transform:translateX(-50%);bottom:calc(30px + env(safe-area-inset-bottom));padding:11px 20px;border:1px solid rgba(230,192,122,.55);border-radius:999px;background:rgba(10,10,22,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#e6c07a;font-family:var(--en);font-size:13px;letter-spacing:.18em;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .4s;white-space:nowrap}
   #takeoff.show{opacity:1;pointer-events:auto}
   #takeoff:hover{border-color:rgba(230,192,122,.95)}
-  #inhint{position:fixed;z-index:21;left:0;right:0;bottom:calc(92px + env(safe-area-inset-bottom));text-align:center;color:var(--soft);font-size:11px;letter-spacing:.12em;pointer-events:none;opacity:0;transition:opacity .5s}
+  #inhint{position:fixed;z-index:21;left:0;right:0;bottom:calc(92px + env(safe-area-inset-bottom));text-align:center;color:var(--soft);font-size:12px;letter-spacing:.12em;pointer-events:none;opacity:0;transition:opacity .5s}
   #inhint.show{opacity:.85}
-  #sound{position:fixed;z-index:21;right:calc(14px + env(safe-area-inset-right));top:calc(58px + env(safe-area-inset-top));padding:7px 12px;border:1px solid rgba(230,192,122,.4);border-radius:999px;background:rgba(10,10,22,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#e6c07a;font-family:var(--en);font-size:11px;letter-spacing:.12em;cursor:pointer;opacity:.85;transition:opacity .3s}
+  #sound{position:fixed;z-index:21;right:calc(14px + env(safe-area-inset-right));top:calc(58px + env(safe-area-inset-top));padding:7px 12px;border:1px solid rgba(230,192,122,.4);border-radius:999px;background:rgba(10,10,22,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:#e6c07a;font-family:var(--en);font-size:12px;letter-spacing:.12em;cursor:pointer;opacity:.85;transition:opacity .3s}
   #sound:hover{opacity:1}
   #sound.muted{color:var(--soft);border-color:rgba(255,255,255,.15)}
+  /* --- 詩の層：待機時の概念一行＋＠の誘い / boot中のスキップ案内 --- */
+  #invite{position:fixed;z-index:7;left:50%;top:calc(20% + env(safe-area-inset-top));transform:translateX(-50%);width:min(88%,660px);text-align:center;pointer-events:none;opacity:0;transition:opacity 1.8s ease}
+  #invite .l1{font-family:var(--head);font-weight:500;font-size:clamp(17px,2.7vw,24px);letter-spacing:.03em;color:var(--fg);line-height:1.35}
+  #skiphint{position:fixed;z-index:7;left:50%;top:calc(13% + env(safe-area-inset-top));transform:translateX(-50%);font-family:var(--head);font-size:12px;letter-spacing:.16em;color:var(--soft);opacity:0;transition:opacity .6s ease;pointer-events:none}
+  #nowebgl{display:none;position:fixed;inset:0;z-index:100;background:#07070d;color:var(--fg);align-items:center;justify-content:center;text-align:center;padding:10vw;font-family:var(--head)}
+  #nowebgl .nw-t{font-size:56px;font-weight:700;color:var(--gold-bright);letter-spacing:.06em}
+  #nowebgl .nw-s{font-size:16px;color:var(--soft);letter-spacing:.14em;margin-top:10px}
+  #nowebgl .nw-p{font-size:15px;color:var(--soft);max-width:34ch;margin:26px auto 0;line-height:1.7;font-family:var(--sans)}
+  #axword{position:fixed;z-index:8;transform:translate(-50%,-50%);font-family:var(--head);font-weight:700;font-size:clamp(30px,7vw,58px);letter-spacing:.05em;text-align:center;pointer-events:none;opacity:0;white-space:nowrap;background-image:linear-gradient(90deg,#e6c07a,#e6c07a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 18px rgba(0,0,0,.7))}
 </style>
 </head>
 <body>
-<canvas id="stage"></canvas>
+<canvas id="stage" role="img" aria-label="An interactive three-dimensional taste coordinate. Drag to rotate, tap a sphere to reveal its cocktail, and tap the centre to step inside."></canvas>
+<div id="nowebgl"><div><div class="nw-t">3DCC</div><div class="nw-s">The Three-Dimensional Cognitive Coordinate</div><p class="nw-p">This experience needs a modern browser with WebGL enabled. Please open it in an up-to-date Chrome, Safari, Firefox or Edge.</p></div></div>
 <div class="top"><div class="en">3DCC</div><div class="jp">The Three-Dimensional Cognitive Coordinate</div></div>
 <div class="readout-note empty">
   <div class="rname">Touch a zone, anywhere.</div>
   <div class="rcoord"></div>
   <div class="rsub"></div>
 </div>
-<div class="hint">Drag to rotate · Tap a sphere</div>
+<div class="hint">Drag to rotate · Tap a sphere<br>Tap the centre @ to step inside</div>
 <div class="copy">Patent- and design-pending (Japan)<br>© Iwao Yoshihide 2026</div>
 <div id="flash"></div>
 <div id="inhint">Drag to orbit @ · Tap a sphere to reach it</div>
-<button id="takeoff" type="button">↑ TAKE OFF</button>
-<button id="sound" type="button">♪ on</button>
+<div id="invite"><div class="l1">The stars are given.<br>The constellations are yours.</div></div>
+<div id="skiphint">Tap to skip</div>
+<div id="axword"></div>
+<button id="takeoff" type="button" aria-label="Leave the origin and return to the outer view">↑ TAKE OFF</button>
+<button id="sound" type="button" aria-label="Toggle sound">♪ on</button>
 <script>
 (function(){
-  if(!window.THREE){return;}
+  function _fallback(){var n=document.getElementById('nowebgl');if(n)n.style.display='flex';}
+  if(!window.THREE){_fallback();return;}
+  try{var _tc=document.createElement('canvas');if(!(_tc.getContext('webgl')||_tc.getContext('experimental-webgl'))){_fallback();return;}}catch(_e){_fallback();return;}
   const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
   const eio=t=>{t=clamp(t);return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;};
@@ -78,22 +106,22 @@
     "Hard|Sweet|Refresh": {n:"Caipirinha", m:"Cachaça · Lime · Sugar"},
     "Hard|Sweet|Mellow": {n:"Rusty Nail", m:"Scotch · Drambuie"},
     "Hard|Sweet|Creamy": {n:"Alexander", m:"Brandy · Crème de Cacao · Cream"},
-    "Mild|Dry|Refresh": {n:"Salty Dog", m:"Vodka · Grapefruit,Salt"},
+    "Mild|Dry|Refresh": {n:"Salty Dog", m:"Vodka · Grapefruit · Salt"},
     "Mild|Dry|Mellow": {n:"Bamboo", m:"Dry Sherry · Dry Vermouth · Bitters"},
-    "Mild|Dry|Creamy": {n:"Cow Boy", m:"Bourbon · Cream"},
+    "Mild|Dry|Creamy": {n:"Cowboy", m:"Bourbon · Cream"},
     "Mild|Semi Sweet|Refresh": {n:"Mojito", m:"White Rum · Lime · Sugar · Mint · Soda"},
     "Mild|Semi Sweet|Mellow": {n:"Adonis", m:"Dry Sherry · Sweet Vermouth · Orange Bitters"},
     "Mild|Semi Sweet|Creamy": {n:"Pina Colada", m:"White Rum · Coconut Cream · Pineapple"},
-    "Mild|Sweet|Refresh": {n:"Long Island Iced Tea", m:"Gin,Vodka · White Rum,Tequila,Lemon,Triple Sec,Cola"},
+    "Mild|Sweet|Refresh": {n:"Long Island Iced Tea", m:"Gin · Vodka · White Rum · Tequila · Lemon · Triple Sec · Cola"},
     "Mild|Sweet|Mellow": {n:"Tequila Sunrise", m:"Tequila · Orange Juice · Grenadine"},
     "Mild|Sweet|Creamy": {n:"Grasshopper", m:"Crème de Menthe · Crème de Cacao · Cream"},
-    "Soft|Dry|Refresh": {n:"Gin Ricky", m:"Gin Ricky: Gin · Lime · Soda"},
-    "Soft|Dry|Mellow": {n:"High Ball", m:"Whisky · Soda"},
-    "Soft|Dry|Creamy": {n:"Red Eye/Tom Boy", m:"Beer · Tomato Juice"},
-    "Soft|Semi Sweet|Refresh": {n:"Gin & Tonic", m:"Gin,Tonic Water"},
-    "Soft|Semi Sweet|Mellow": {n:"Sea Breeze", m:"Vodka · Cranberry,Grapefruit"},
+    "Soft|Dry|Refresh": {n:"Gin Ricky", m:"Gin · Lime · Soda"},
+    "Soft|Dry|Mellow": {n:"Highball", m:"Whisky · Soda"},
+    "Soft|Dry|Creamy": {n:"Red Eye", m:"Beer · Tomato Juice"},
+    "Soft|Semi Sweet|Refresh": {n:"Gin & Tonic", m:"Gin · Tonic Water"},
+    "Soft|Semi Sweet|Mellow": {n:"Sea Breeze", m:"Vodka · Cranberry · Grapefruit"},
     "Soft|Semi Sweet|Creamy": {n:"Snowball", m:"Advocaat · Lemonade"},
-    "Soft|Sweet|Refresh": {n:"Cassis & Soda", m:"Crème de Cassis,Soda"},
+    "Soft|Sweet|Refresh": {n:"Cassis & Soda", m:"Crème de Cassis · Soda"},
     "Soft|Sweet|Mellow": {n:"Fuzzy Navel", m:"Peach Schnapps · Orange Juice"},
     "Soft|Sweet|Creamy": {n:"Kahlua Milk", m:"Coffee Liqueur · Milk"}
   };
@@ -290,8 +318,28 @@
   window.addEventListener('resize',setSize);setSize();
 
   /* ===== 起動シーケンス（ゆっくり·ドラマチック） ===== */
-  const B={at:[0.5,3.0],axY:[3.0,5.5],axX:[5.5,7.8],axZ:[7.8,10.1],sp:[10.1,13.8],done:14.2};
+  const B={at:[0.25,1.5],axY:[1.5,2.75],axX:[2.75,3.9],axZ:[3.9,5.05],sp:[5.05,6.9],done:7.1};
+  const axword=document.getElementById('axword');
+  const AXW=[[B.axY[0],B.axY[1]+0.35,'Strength'],[B.axX[0],B.axX[1]+0.35,'Texture'],[B.axZ[0],B.axZ[1]+0.35,'Sweetness']];
+  const GRAD={Strength:['#bcd0f5','#9a93a6'],Texture:['#8fe3a8','#f0a0a0'],Sweetness:['#bfe6ec','#f0c080']};
+  const AL=(SP+1.05)*0.58;
+  const AXVEC={Strength:new THREE.Vector3(0,AL,0),Texture:new THREE.Vector3(AL,0,0),Sweetness:new THREE.Vector3(0,0,AL)};
+  let axwLast='';
+  function updateAxWord(el){
+    if(!axword)return;
+    let best=0,word='';
+    for(var i=0;i<AXW.length;i++){var a=AXW[i][0],b=AXW[i][1],t=Math.max(0,Math.min(1,(el-a)/(b-a))),pu=Math.sin(t*Math.PI);if(pu>best){best=pu;word=AXW[i][2];}}
+    if(!word||best<0.01){axword.style.opacity=0;return;}
+    if(word!==axwLast){axword.textContent=word;axword.style.backgroundImage='linear-gradient(90deg,'+GRAD[word][0]+','+GRAD[word][1]+')';axwLast=word;}
+    group.updateMatrixWorld();camera.updateMatrixWorld();camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+    var v=AXVEC[word].clone().applyMatrix4(group.matrixWorld).project(camera);
+    if(v.z>1){axword.style.opacity=0;return;}
+    axword.style.left=((v.x*0.5+0.5)*window.innerWidth)+'px';
+    axword.style.top=((-v.y*0.5+0.5)*window.innerHeight)+'px';
+    axword.style.opacity=(best*0.92).toFixed(3);
+  }
   let booting=!reduce, bootT0=null;
+  window.__cs=()=>({mode,booting,internalActive});
   spheres.forEach(o=>{o._d=o.center?0:(Math.abs(o.zone.x)+Math.abs(o.zone.y)+Math.abs(o.zone.z));});
   function sg(el,a,b){return eio((el-a)/(b-a));}
   function applyBoot(el){
@@ -305,8 +353,9 @@
     arrowObjs.forEach(o=>{const p=axp[o.userData.axis];o.scale.setScalar(Math.max(0.0001,p));o.line.material.opacity=p;o.cone.material.opacity=p;});
     const lend={y:B.axY[1],x:B.axX[1],z:B.axZ[1]};
     labelObjs.forEach(l=>{const e=lend[l.userData.axis];l.material.opacity=sg(el,e-0.5,e+0.6);});
-    spheres.forEach(o=>{if(o.center)return;const st=(o._d-1)/2*1.6;const p=sg(el,B.sp[0]+st,B.sp[0]+st+2.0);o.mesh.material.opacity=p*0.8;o.mesh.scale.setScalar(0.0001+p);o.halo.material.opacity=p*0.10;});
+    spheres.forEach(o=>{if(o.center)return;const st=(o._d-1)/2*1.6;const p=sg(el,B.sp[0]+st,B.sp[0]+st+2.0);o.mesh.material.opacity=p*0.86;o.mesh.scale.setScalar(0.0001+p);o.halo.material.opacity=p*0.10;});
     rotY+=0.0020*sg(el,B.sp[0],B.done);
+    updateAxWord(el);
   }
   function finishBoot(){
     booting=false;
@@ -314,7 +363,8 @@
     if(atBornAt===null)atBornAt=performance.now();
     arrowObjs.forEach(o=>{o.scale.setScalar(1);o.line.material.opacity=1;o.cone.material.opacity=1;});
     labelObjs.forEach(l=>l.material.opacity=1);
-    spheres.forEach(o=>{o.mesh.material.opacity=0.8;o.mesh.scale.setScalar(1);o.halo.material.opacity=0.10;});
+    spheres.forEach(o=>{o.mesh.material.opacity=0.86;o.mesh.scale.setScalar(1);o.halo.material.opacity=0.10;});
+    if(axword)axword.style.opacity=0;
     camera.position.copy(baseCamPos);camera.lookAt(lookTarget);
     if(satStart===null)satStart=performance.now();
     autoRot=!reduce;
@@ -322,7 +372,7 @@
   if(reduce)finishBoot();
 
   const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();
-  let selected=null,bloomFx=null,closeFx=null;
+  let selected=null,bloomFx=null,closeFx=null,autoClose=null;
   const note=document.querySelector('.readout-note');
   const rName=note.querySelector('.rname'),rCoord=note.querySelector('.rcoord'),rSub=note.querySelector('.rsub');
   function setReadoutText(m){
@@ -374,8 +424,10 @@
     const o=spheres.find(s=>s.mesh===m); AUD.click(coordFreq(o),panOf(m));
     if(reduce){o.mesh.scale.setScalar(1);o.halo.material.opacity=0.10;birthReadout(o);}
     else{bloomFx={o,t0:performance.now()+340,born:false};} /* 走り(≈340ms)の到達に合わせ、球が開いて光→文字になる */
+    clearTimeout(autoClose); autoClose=setTimeout(function(){ if(mode==='external'&&selected===m)closeReadout(); },3800); /* 数秒でカクテル窓を閉じ、操作ガイドを呼び戻す */
   }
   function closeReadout(){
+    clearTimeout(autoClose);
     if(!selected)return;
     killNeon();
     AUD.closeTick(); const o=spheres.find(s=>s.mesh===selected);
@@ -589,6 +641,30 @@
   document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 })();
 </script>
-<script>document.getElementById('stage').addEventListener('pointerdown',function(){var h=document.querySelector('.hint');if(h)h.style.opacity=0;},{once:true});</script>
+<script>
+(function(){
+  var invite=document.getElementById('invite'), skip=document.getElementById('skiphint');
+  var hint=document.querySelector('.hint'), ro=document.querySelector('.readout-note');
+  var last=performance.now();
+  ['pointerdown','pointermove','wheel','keydown'].forEach(function(ev){
+    addEventListener(ev,function(){last=performance.now();},{capture:true,passive:true});
+  });
+  var IN=1800,HOLD=4600,OUT=1800,GAP=6200,CYCLE=IN+HOLD+OUT+GAP;
+  var idleStart=null;
+  function tick(){
+    var st=window.__cs?window.__cs():null, now=performance.now();
+    if(skip) skip.style.opacity=(st&&st.booting)?'0.55':'0';
+    var guide=st&&st.mode==='external'&&!st.booting&&!st.internalActive&&ro&&ro.classList.contains('empty');
+    if(hint) hint.style.opacity=guide?'1':'0';
+    var ok=st&&st.mode==='external'&&!st.booting&&!st.internalActive&&(now-last>4500);
+    if(!ok){ if(invite)invite.style.opacity='0'; idleStart=null; requestAnimationFrame(tick); return; }
+    if(idleStart===null) idleStart=now;
+    var t=(now-idleStart)%CYCLE;
+    if(invite) invite.style.opacity=(t<IN+HOLD)?'0.66':'0';
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+</script>
 </body>
 </html>
