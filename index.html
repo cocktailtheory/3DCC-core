@@ -62,6 +62,10 @@
   #nowebgl .nw-s{font-size:16px;color:var(--soft);letter-spacing:.14em;margin-top:10px}
   #nowebgl .nw-p{font-size:15px;color:var(--soft);max-width:34ch;margin:26px auto 0;line-height:1.7;font-family:var(--sans)}
   #axword{position:fixed;z-index:8;transform:translate(-50%,-50%);font-family:var(--head);font-weight:700;font-size:clamp(30px,7vw,58px);letter-spacing:.05em;text-align:center;pointer-events:none;opacity:0;white-space:nowrap;background-image:linear-gradient(90deg,#e6c07a,#e6c07a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 18px rgba(0,0,0,.7))}
+  #capHud{position:fixed;z-index:99;left:50%;top:calc(8px + env(safe-area-inset-top));transform:translateX(-50%);
+    font-family:var(--sans);font-size:11px;letter-spacing:.06em;color:var(--gold);background:rgba(13,13,22,.82);
+    border:1px solid var(--line);border-radius:8px;padding:6px 12px;pointer-events:none;white-space:nowrap;max-width:96vw;overflow:hidden}
+  body.cap-clean .top,body.cap-clean .readout-note,body.cap-clean .hint,body.cap-clean #takeoff,body.cap-clean #capHud{display:none!important}
 </style>
 </head>
 <body>
@@ -90,6 +94,16 @@
   const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
   const eio=t=>{t=clamp(t);return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;};
+  /* ===== capture mode (?capture) — 撮影専用の隠し機能。本番では不活性 ===== */
+  const CAP={
+    on:(/capture/i.test(location.search)||/capture/i.test(location.hash)),
+    frozen:false, mark:0, accum:0, spin:true, cleanUI:false,
+    now(){ return this.frozen ? this.mark : (performance.now()-this.accum); },
+    freeze(f){ if(f===this.frozen)return;
+      if(f){ this.mark=this.now(); this.frozen=true; }
+      else { this.accum=performance.now()-this.mark; this.frozen=false; } },
+    step(ms){ if(this.frozen)this.mark+=ms; }
+  };
 
   const HARD=[["Hard",1],["Mild",0],["Soft",-1]];
   const SWEET=[["Dry",-1],["Semi Sweet",0],["Sweet",1]];
@@ -347,7 +361,7 @@
     camera.position.copy(baseCamPos).multiplyScalar(dolly);camera.lookAt(lookTarget);
     const a=sg(el,B.at[0],B.at[1]);
     if(atSprite)atSprite.material.opacity=a;
-    if(atBornAt===null&&el>=B.at[1])atBornAt=performance.now();
+    if(atBornAt===null&&el>=B.at[1])atBornAt=CAP.now();
     if(centerObj){centerObj.mesh.material.opacity=a;centerObj.mesh.scale.setScalar(0.0001+a);centerObj.halo.material.opacity=a*0.10;}
     const axp={y:sg(el,B.axY[0],B.axY[1]),x:sg(el,B.axX[0],B.axX[1]),z:sg(el,B.axZ[0],B.axZ[1])};
     arrowObjs.forEach(o=>{const p=axp[o.userData.axis];o.scale.setScalar(Math.max(0.0001,p));o.line.material.opacity=p;o.cone.material.opacity=p;});
@@ -360,13 +374,13 @@
   function finishBoot(){
     booting=false;
     if(atSprite)atSprite.material.opacity=1;
-    if(atBornAt===null)atBornAt=performance.now();
+    if(atBornAt===null)atBornAt=CAP.now();
     arrowObjs.forEach(o=>{o.scale.setScalar(1);o.line.material.opacity=1;o.cone.material.opacity=1;});
     labelObjs.forEach(l=>l.material.opacity=1);
     spheres.forEach(o=>{o.mesh.material.opacity=0.86;o.mesh.scale.setScalar(1);o.halo.material.opacity=0.10;});
     if(axword)axword.style.opacity=0;
     camera.position.copy(baseCamPos);camera.lookAt(lookTarget);
-    if(satStart===null)satStart=performance.now();
+    if(satStart===null)satStart=CAP.now();
     autoRot=!reduce;
   }
   if(reduce)finishBoot();
@@ -422,9 +436,9 @@
     selected=m;m.material.emissive=m.userData.col.clone().multiplyScalar(1.0);
     spawnNeon(m);
     const o=spheres.find(s=>s.mesh===m); AUD.click(coordFreq(o),panOf(m));
-    if(reduce){o.mesh.scale.setScalar(1);o.halo.material.opacity=0.10;birthReadout(o);}
-    else{bloomFx={o,t0:performance.now()+340,born:false};} /* 走り(≈340ms)の到達に合わせ、球が開いて光→文字になる */
-    clearTimeout(autoClose); autoClose=setTimeout(function(){ if(mode==='external'&&selected===m)closeReadout(); },3800); /* 数秒でカクテル窓を閉じ、操作ガイドを呼び戻す */
+    if(reduce||CAP.on){o.mesh.scale.setScalar(1);o.halo.material.opacity=0.10;birthReadout(o);bloomFx=null;} /* capture：ポップアップは即時表示＝凍結中でも確実に出す */
+    else{bloomFx={o,t0:CAP.now()+340,born:false};} /* 走り(≈340ms)の到達に合わせ、球が開いて光→文字になる */
+    clearTimeout(autoClose); if(!CAP.on)autoClose=setTimeout(function(){ if(mode==='external'&&selected===m)closeReadout(); },3800); /* 数秒でカクテル窓を閉じ、操作ガイドを呼び戻す（capture時は自動クローズしない＝ネオンを保持） */
   }
   function closeReadout(){
     clearTimeout(autoClose);
@@ -433,7 +447,7 @@
     AUD.closeTick(); const o=spheres.find(s=>s.mesh===selected);
     bloomFx=null;
     if(reduce){o.mesh.material.emissive=o.col.clone().multiplyScalar(0.15);o.mesh.scale.setScalar(1);o.halo.material.opacity=0.10;}
-    else{closeFx={o,t0:performance.now()};} /* 光が集まり、球として元の位置に還る */
+    else{closeFx={o,t0:CAP.now()};} /* 光が集まり、球として元の位置に還る */
     selected=null;
     fadeReadoutOut();
   }
@@ -472,8 +486,8 @@
     else if(selected)closeReadout();
   }
   /* ===== ＠に入る／還る ===== */
-  function enterSequence(){ if(mode!=='external')return; if(selected)closeReadout(); mode='toIn'; tStart=performance.now(); tSwapped=false; autoRot=false; dragging=false; if(resumeT)clearTimeout(resumeT); AUD.enter(); }
-  function exitSequence(){ if(mode!=='internal')return; mode='toOut'; tStart=performance.now(); tSwapped=false; clearInside(); AUD.exit(); }
+  function enterSequence(){ if(mode!=='external')return; if(selected)closeReadout(); mode='toIn'; tStart=CAP.now(); tSwapped=false; autoRot=false; dragging=false; if(resumeT)clearTimeout(resumeT); AUD.enter(); }
+  function exitSequence(){ if(mode!=='internal')return; mode='toOut'; tStart=CAP.now(); tSwapped=false; clearInside(); AUD.exit(); }
   /* 内観の視点：原点そのものでなく、＠を取り巻く電子軌道に座る＝「あなたは中心を巡る」。
      一軌道ぶん(外環0.80)はっきり外へ。斜めに置くことで軸上の6ゾーン(E/V/K/P/M/N)が
      視線と同軸で潰れる問題を解く。IN_R(軌道半径)と IN_FOV が実機での主な調整ノブ。 */
@@ -588,7 +602,7 @@
       joints.push({mesh:jm,dist:segs[k].cum+segs[k].len});
     }
     group.add(g);
-    neon={g,segs,joints,total:cum,t0:performance.now(),sph:spheres.find(o=>o.mesh===mesh)};
+    neon={g,segs,joints,total:cum,t0:CAP.now(),sph:spheres.find(o=>o.mesh===mesh)};
   }
   function updateNeon(now){
     const t=now-neon.t0,G=340,hold=800,fade=650,T=neon.total;
@@ -606,7 +620,7 @@
   }
   function animate(){
     requestAnimationFrame(animate);
-    const now=performance.now();
+    const now=CAP.now();
     if(mode==='toIn'||mode==='toOut'){
       const dur=reduce?260:(mode==='toIn'?1150:1000), mid=reduce?130:(mode==='toIn'?520:420), e=now-tStart;
       if(mode==='toIn'&&!tSwapped&&!reduce&&e<mid){ /* 接近：＠へ寄り、＠が膨らみ、環がほどける */
@@ -619,18 +633,18 @@
       if(e>=dur){ flash.style.opacity=0; mode=(mode==='toIn')?'internal':'external'; tSwapped=false; if(mode==='external')satVisMul=1; }
     }
     if(booting){
-      if(bootT0===null)bootT0=performance.now();
-      const el=(performance.now()-bootT0)/1000;
+      if(bootT0===null)bootT0=CAP.now();
+      const el=(CAP.now()-bootT0)/1000;
       applyBoot(el);
       if(el>=B.done)finishBoot();
-    }else if(autoRot&&!dragging&&!internalActive&&mode==='external'){rotY+=0.0022;}
+    }else if(autoRot&&!dragging&&!internalActive&&mode==='external'&&CAP.spin&&!CAP.frozen){rotY+=0.0022;}
     if(internalActive){ camera.position.copy(inPos()); camera.lookAt(_ORIGIN); }
     else if(mode==='external'){ group.rotation.x=rotX;group.rotation.y=rotY; }
-    if(neon)updateNeon(performance.now());
-    if(bloomFx)updateBloom(performance.now());
-    if(closeFx)updateClose(performance.now());
-    updateHeart(performance.now());
-    updateSat(performance.now());
+    if(neon)updateNeon(CAP.now());
+    if(bloomFx)updateBloom(CAP.now());
+    if(closeFx)updateClose(CAP.now());
+    updateHeart(CAP.now());
+    updateSat(CAP.now());
     renderer.render(scene,camera);
   }
   animate();
@@ -639,6 +653,43 @@
     es.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}});
   },{threshold:0.12});
   document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  /* ===== capture HUD + keys (only when ?capture) ===== */
+  if(CAP.on){
+    const hud=document.createElement('div'); hud.id='capHud'; document.body.appendChild(hud);
+    let helpOn=true;
+    const draw=()=>{ hud.style.display=helpOn?'block':'none';
+      hud.textContent='CAPTURE  '+(CAP.frozen?'❄ FROZEN':'▶ live')
+        +'   F freeze  ·  . , step  ·  S spin['+(CAP.spin?'on':'off')+']'
+        +'  ·  R rings  ·  P pulse  ·  B boot  ·  Esc exit@  ·  H clean  ·  / hide'; };
+    draw();
+    addEventListener('keydown',e=>{
+      const k=e.key.toLowerCase();
+      if(k==='f')CAP.freeze(!CAP.frozen);
+      else if(k==='.')CAP.step(1000/60);
+      else if(k===',')CAP.step(-1000/60);
+      else if(k==='s')CAP.spin=!CAP.spin;
+      else if(k==='r'){ if(atSat)atSat.visible=!atSat.visible; }
+      else if(k==='p'){ if(atGlow)atGlow.visible=!atGlow.visible; }
+      else if(k==='b'){ if(mode==='external'&&!internalActive&&!booting){ if(selected)closeReadout(); atBornAt=null; satStart=null; bootT0=null; autoRot=false; booting=true; } } /* ＠の立ち上がりを再生：凍結中はel=0で待機し . で一コマずつ立ち上がる */
+      else if(k==='escape'){ if(mode==='internal')exitSequence(); } /* クリーン中でも＠から脱出（TAKE OFFが隠れていても出られる） */
+      else if(k==='h'){ CAP.cleanUI=!CAP.cleanUI; document.body.classList.toggle('cap-clean',CAP.cleanUI); }
+      else if(k==='/')helpOn=!helpOn;
+      else return;
+      e.preventDefault(); draw();
+    });
+  }
+
+  /* ===== rec mode (?rec) — 動画収録用：本番と同一挙動＋起動再生(B)/＠脱出(Esc)のみ。HUDなし・非表示なし ===== */
+  if(!CAP.on && new URLSearchParams(location.search).has('rec')){
+    addEventListener('keydown',e=>{
+      const k=e.key.toLowerCase();
+      if(k==='b'){ if(mode==='external'&&!internalActive&&!booting){ if(selected)closeReadout(); atBornAt=null; satStart=null; bootT0=null; autoRot=false; booting=true; } } /* 録画を回した状態で合図に合わせ＠の起動を再生 */
+      else if(k==='escape'){ if(mode==='internal')exitSequence(); }
+      else return;
+      e.preventDefault();
+    });
+  }
 })();
 </script>
 <script>
